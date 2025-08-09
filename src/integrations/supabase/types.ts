@@ -61,8 +61,11 @@ export type Database = {
           direccion: string | null
           email: string | null
           id: string
+          logo_url: string | null
           nombre: string
+          notas: string | null
           telefono: string | null
+          tipo: string | null
           updated_at: string | null
         }
         Insert: {
@@ -72,8 +75,11 @@ export type Database = {
           direccion?: string | null
           email?: string | null
           id?: string
+          logo_url?: string | null
           nombre: string
+          notas?: string | null
           telefono?: string | null
+          tipo?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -83,8 +89,11 @@ export type Database = {
           direccion?: string | null
           email?: string | null
           id?: string
+          logo_url?: string | null
           nombre?: string
+          notas?: string | null
           telefono?: string | null
+          tipo?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -104,6 +113,7 @@ export type Database = {
           email: string
           id: string
           nombre: string
+          role: string | null
           updated_at: string | null
         }
         Insert: {
@@ -112,6 +122,7 @@ export type Database = {
           email: string
           id?: string
           nombre: string
+          role?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -120,6 +131,7 @@ export type Database = {
           email?: string
           id?: string
           nombre?: string
+          role?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -246,34 +258,40 @@ export type Database = {
       productos: {
         Row: {
           activo: boolean | null
+          categoria: string | null
           created_at: string | null
           descripcion: string | null
           id: string
           nombre: string
           precio: number
           sku: string
+          stock_disponible: number | null
           updated_at: string | null
           url_imagen: string | null
         }
         Insert: {
           activo?: boolean | null
+          categoria?: string | null
           created_at?: string | null
           descripcion?: string | null
           id?: string
           nombre: string
           precio: number
           sku: string
+          stock_disponible?: number | null
           updated_at?: string | null
           url_imagen?: string | null
         }
         Update: {
           activo?: boolean | null
+          categoria?: string | null
           created_at?: string | null
           descripcion?: string | null
           id?: string
           nombre?: string
           precio?: number
           sku?: string
+          stock_disponible?: number | null
           updated_at?: string | null
           url_imagen?: string | null
         }
@@ -292,6 +310,10 @@ export type Database = {
           nombre: string
           precio: number
         }[]
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {
