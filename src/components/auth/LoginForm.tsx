@@ -141,16 +141,11 @@ export function LoginForm() {
           </form>
         </Card>
 
-        {/* Demo Credentials */}
-        <Card className="border-dashed border-2 border-muted">
-          <CardContent className="pt-6">
-            <div className="text-center text-sm text-muted-foreground">
-              <p className="font-semibold mb-2">Credenciales de Demo:</p>
-              <p>Email: <code className="bg-muted px-1 rounded">javvv.6@gmail.com</code></p>
-              <p>Password: <code className="bg-muted px-1 rounded">karota33</code></p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Información de acceso */}
+        <div className="text-center text-sm text-muted-foreground">
+          <p className="font-semibold mb-2">¿Problemas para acceder?</p>
+          <p>Contacta con el administrador del sistema</p>
+        </div>
 
         {/* Footer */}
         <div className="text-center text-sm text-muted-foreground">
