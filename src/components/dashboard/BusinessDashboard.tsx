@@ -20,8 +20,13 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
+import { formatCurrency } from "@/lib/utils";
 import CountUp from 'react-countup';
+import { AdvancedAnalytics } from "../business/AdvancedAnalytics";
+import { BusinessTools } from "../business/BusinessTools";
+import { OrderTimeline } from "../business/OrderTimeline";
+import { ReportGenerator } from "../business/ReportGenerator";
+import { ClientProfileCard } from "../business/ClientProfileCard";
 
 interface DashboardStats {
   totalClientes: number;
@@ -319,14 +324,16 @@ export function BusinessDashboard() {
         </div>
 
         {/* Main Content */}
-        <Tabs defaultValue="clientes" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="clientes">Mis Clientes</TabsTrigger>
-            <TabsTrigger value="pedidos">Pedidos Recientes</TabsTrigger>
+        <Tabs defaultValue="clients" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="clients">Clientes</TabsTrigger>
+            <TabsTrigger value="orders">Pedidos</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="tools">Herramientas</TabsTrigger>
+            <TabsTrigger value="reports">Reportes</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="clientes" className="space-y-4">
+          <TabsContent value="clients" className="space-y-4">
             <Card className="card-barplas">
               <CardHeader>
                 <CardTitle>Mis Clientes ({clientes.length})</CardTitle>
@@ -379,188 +386,20 @@ export function BusinessDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="pedidos" className="space-y-4">
-            <Card className="card-barplas">
-              <CardHeader>
-                <CardTitle>Pedidos Recientes</CardTitle>
-                <CardDescription>
-                  Últimos pedidos realizados por tus clientes
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {pedidos.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      No hay pedidos registrados
-                    </p>
-                  ) : (
-                    pedidos.map((pedido) => (
-                      <div key={pedido.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex-1">
-                          <h3 className="font-semibold">{pedido.numero_pedido}</h3>
-                          <p className="text-sm text-muted-foreground">{pedido.cliente_nombre}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(pedido.fecha_pedido).toLocaleDateString('es-ES')}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <p className="font-bold">{formatCurrency(pedido.total)}</p>
-                            <Badge variant={
-                              pedido.estado === 'confirmado' ? 'default' :
-                              pedido.estado === 'pendiente' ? 'secondary' :
-                              pedido.estado === 'enviado' ? 'default' : 'destructive'
-                            }>
-                              {pedido.estado.toUpperCase()}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="orders" className="space-y-6">
+            <OrderTimeline />
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <Card className="card-barplas">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                    Evolución de Ventas
-                  </CardTitle>
-                  <CardDescription>Ventas mensuales en los últimos 6 meses</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={ventasData}>
-                      <defs>
-                        <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                      <XAxis 
-                        dataKey="mes" 
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      />
-                      <YAxis 
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      />
-                      <Tooltip 
-                        formatter={(value) => [formatCurrency(Number(value)), 'Ventas']}
-                        labelFormatter={(label) => `Mes: ${label}`}
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="ventas"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={3}
-                        fillOpacity={1}
-                        fill="url(#colorVentas)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+          <TabsContent value="analytics" className="space-y-6">
+            <AdvancedAnalytics />
+          </TabsContent>
 
-              <Card className="card-barplas">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-secondary" />
-                    Pedidos por Mes
-                  </CardTitle>
-                  <CardDescription>Número de pedidos mensuales</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={ventasData}>
-                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                      <XAxis 
-                        dataKey="mes"
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      />
-                      <YAxis 
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      />
-                      <Tooltip 
-                        formatter={(value) => [value, 'Pedidos']}
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                      />
-                      <Bar 
-                        dataKey="pedidos" 
-                        fill="hsl(var(--secondary))"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
+          <TabsContent value="tools" className="space-y-6">
+            <BusinessTools />
+          </TabsContent>
 
-            {clientesData.length > 0 && (
-              <Card className="card-barplas">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-success" />
-                    Top Clientes por Ventas
-                  </CardTitle>
-                  <CardDescription>Los 5 clientes con mayores ventas</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={clientesData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ nombre, percent }) => `${nombre} (${(percent * 100).toFixed(0)}%)`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="ventas"
-                        >
-                          {clientesData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    
-                    <div className="space-y-3">
-                      {clientesData.map((cliente, index) => (
-                        <div key={cliente.nombre} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div 
-                              className="w-4 h-4 rounded-full" 
-                              style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                            />
-                            <span className="font-medium">{cliente.nombre}</span>
-                          </div>
-                          <span className="font-bold text-primary">
-                            {formatCurrency(cliente.ventas)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+          <TabsContent value="reports" className="space-y-6">
+            <ReportGenerator />
           </TabsContent>
         </Tabs>
       </div>
