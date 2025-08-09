@@ -63,11 +63,13 @@ const configItems = [
 
 export function AppSidebar() {
   const { state, setOpen } = useSidebar();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user, loading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname + location.search;
   const collapsed = state === "collapsed";
+
+  console.log('🚀 AppSidebar render - isAdmin:', isAdmin, 'user:', user, 'loading:', loading);
 
   const isActive = (path: string) => {
     if (path === "/dashboard" && location.pathname === "/dashboard" && !location.search) {

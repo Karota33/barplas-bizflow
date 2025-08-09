@@ -14,25 +14,33 @@ export const useAuth = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchUserRole = async (userId: string) => {
+    console.log('🔍 Fetching user role for ID:', userId);
     try {
-      const { data: comercial } = await supabase
+      const { data: comercial, error } = await supabase
         .from('comerciales')
         .select('*')
         .eq('id', userId)
         .single();
 
+      console.log('📋 Comercial data:', comercial);
+      console.log('❌ Fetch error:', error);
+
       if (comercial) {
+        console.log('✅ Setting user role:', comercial.role);
         setUser(prevUser => prevUser ? {
           ...prevUser,
           role: comercial.role,
           nombre: comercial.nombre
         } : null);
-        setIsAdmin(comercial.role === 'admin');
+        const isAdminUser = comercial.role === 'admin';
+        console.log('🔐 Is admin?', isAdminUser);
+        setIsAdmin(isAdminUser);
       } else {
+        console.log('❌ No comercial data found');
         setIsAdmin(false);
       }
     } catch (error) {
-      console.error('Error fetching user role:', error);
+      console.error('💥 Error fetching user role:', error);
       setIsAdmin(false);
     } finally {
       setLoading(false);
