@@ -128,28 +128,40 @@ export type Database = {
         Row: {
           cantidad: number
           created_at: string | null
+          estado: string | null
+          fecha_confirmacion: string | null
           id: string
+          notas_item: string | null
           pedido_id: string | null
           precio_unitario: number
           producto_id: string | null
+          stock_disponible: number | null
           subtotal: number
         }
         Insert: {
           cantidad: number
           created_at?: string | null
+          estado?: string | null
+          fecha_confirmacion?: string | null
           id?: string
+          notas_item?: string | null
           pedido_id?: string | null
           precio_unitario: number
           producto_id?: string | null
+          stock_disponible?: number | null
           subtotal: number
         }
         Update: {
           cantidad?: number
           created_at?: string | null
+          estado?: string | null
+          fecha_confirmacion?: string | null
           id?: string
+          notas_item?: string | null
           pedido_id?: string | null
           precio_unitario?: number
           producto_id?: string | null
+          stock_disponible?: number | null
           subtotal?: number
         }
         Relationships: [
@@ -175,10 +187,15 @@ export type Database = {
           created_at: string | null
           estado: string | null
           fecha_entrega: string | null
+          fecha_entrega_estimada: string | null
           fecha_pedido: string | null
           id: string
+          items_confirmados: Json | null
+          motivo_no_confirmado: string | null
           notas: string | null
+          notas_operativas: string | null
           numero_pedido: string
+          stock_confirmado: boolean | null
           total: number
           updated_at: string | null
         }
@@ -187,10 +204,15 @@ export type Database = {
           created_at?: string | null
           estado?: string | null
           fecha_entrega?: string | null
+          fecha_entrega_estimada?: string | null
           fecha_pedido?: string | null
           id?: string
+          items_confirmados?: Json | null
+          motivo_no_confirmado?: string | null
           notas?: string | null
+          notas_operativas?: string | null
           numero_pedido: string
+          stock_confirmado?: boolean | null
           total: number
           updated_at?: string | null
         }
@@ -199,10 +221,15 @@ export type Database = {
           created_at?: string | null
           estado?: string | null
           fecha_entrega?: string | null
+          fecha_entrega_estimada?: string | null
           fecha_pedido?: string | null
           id?: string
+          items_confirmados?: Json | null
+          motivo_no_confirmado?: string | null
           notas?: string | null
+          notas_operativas?: string | null
           numero_pedido?: string
+          stock_confirmado?: boolean | null
           total?: number
           updated_at?: string | null
         }
