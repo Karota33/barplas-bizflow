@@ -27,6 +27,8 @@ import { BusinessTools } from "../business/BusinessTools";
 import { OrderTimeline } from "../business/OrderTimeline";
 import { ReportGenerator } from "../business/ReportGenerator";
 import { ClientProfileCard } from "../business/ClientProfileCard";
+import { OperationalOrderManager } from "../business/OperationalOrderManager";
+import { CommissionReportGenerator } from "../business/CommissionReportGenerator";
 
 interface DashboardStats {
   totalClientes: number;
@@ -325,12 +327,14 @@ export function BusinessDashboard() {
 
         {/* Main Content */}
         <Tabs defaultValue="clients" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="clients">Clientes</TabsTrigger>
             <TabsTrigger value="orders">Pedidos</TabsTrigger>
+            <TabsTrigger value="operational">Operativo</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="tools">Herramientas</TabsTrigger>
             <TabsTrigger value="reports">Reportes</TabsTrigger>
+            <TabsTrigger value="commissions">Comisiones</TabsTrigger>
           </TabsList>
 
           <TabsContent value="clients" className="space-y-4">
@@ -390,6 +394,10 @@ export function BusinessDashboard() {
             <OrderTimeline />
           </TabsContent>
 
+          <TabsContent value="operational" className="space-y-6">
+            <OperationalOrderManager />
+          </TabsContent>
+
           <TabsContent value="analytics" className="space-y-6">
             <AdvancedAnalytics />
           </TabsContent>
@@ -400,6 +408,10 @@ export function BusinessDashboard() {
 
           <TabsContent value="reports" className="space-y-6">
             <ReportGenerator />
+          </TabsContent>
+
+          <TabsContent value="commissions" className="space-y-6">
+            <CommissionReportGenerator />
           </TabsContent>
         </Tabs>
       </div>
