@@ -13,63 +13,65 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const { data: comercial } = await supabase
+        .from('comerciales')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (comercial) {
+        setUser(prevUser => prevUser ? {
+          ...prevUser,
+          role: comercial.role,
+          nombre: comercial.nombre
+        } : null);
+        setIsAdmin(comercial.role === 'admin');
+      } else {
+        setIsAdmin(false);
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      setIsAdmin(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        // Only synchronous state updates here
         setSession(session);
+        setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch comercial data including role
-          const { data: comercial } = await supabase
-            .from('comerciales')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (comercial) {
-            const userWithRole = {
-              ...session.user,
-              role: comercial.role,
-              nombre: comercial.nombre
-            };
-            setUser(userWithRole);
-            setIsAdmin(comercial.role === 'admin');
-          } else {
-            setUser(session.user);
-            setIsAdmin(false);
-          }
+          // Defer Supabase calls with setTimeout to prevent deadlock
+          setTimeout(() => {
+            fetchUserRole(session.user.id);
+          }, 0);
         } else {
           setUser(null);
           setIsAdmin(false);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
       if (session?.user) {
-        const { data: comercial } = await supabase
-          .from('comerciales')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (comercial) {
-          const userWithRole = {
-            ...session.user,
-            role: comercial.role,
-            nombre: comercial.nombre
-          };
-          setUser(userWithRole);
-          setIsAdmin(comercial.role === 'admin');
-        } else {
-          setUser(session.user);
-          setIsAdmin(false);
-        }
+        setTimeout(() => {
+          fetchUserRole(session.user.id);
+        }, 0);
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
