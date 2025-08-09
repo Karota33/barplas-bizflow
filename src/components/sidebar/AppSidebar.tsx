@@ -11,8 +11,11 @@ import {
   Search,
   Download,
   LogOut,
-  Package
+  Package,
+  Shield,
+  UserCog
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 import {
   Sidebar,
@@ -36,9 +39,15 @@ import { toast } from "sonner";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, badge: null },
-  { title: "Clientes", url: "/dashboard?tab=clients", icon: Users, badge: null },
+  { title: "Mis Clientes", url: "/clientes", icon: Users, badge: null },
   { title: "Pedidos", url: "/dashboard?tab=orders", icon: ShoppingBag, badge: "3" },
   { title: "Analytics", url: "/dashboard?tab=analytics", icon: BarChart3, badge: null },
+];
+
+const adminItems = [
+  { title: "Panel Admin", url: "/admin", icon: Shield, badge: null },
+  { title: "Comerciales", url: "/admin/comerciales", icon: UserCog, badge: null },
+  { title: "Productos", url: "/admin/productos", icon: Package, badge: null },
 ];
 
 const toolItems = [
@@ -54,6 +63,7 @@ const configItems = [
 
 export function AppSidebar() {
   const { state, setOpen } = useSidebar();
+  const { isAdmin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname + location.search;
@@ -62,6 +72,10 @@ export function AppSidebar() {
   const isActive = (path: string) => {
     if (path === "/dashboard" && location.pathname === "/dashboard" && !location.search) {
       return true;
+    }
+    // Para rutas exactas sin query params
+    if (!path.includes('?')) {
+      return location.pathname === path;
     }
     return currentPath === path;
   };
@@ -133,6 +147,30 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Admin Navigation - Only for admin users */}
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administración</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink 
+                        to={item.url}
+                        className={({ isActive: active }) => getNavCls(isActive(item.url))}
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {/* Tools Navigation */}
         <SidebarGroup>
