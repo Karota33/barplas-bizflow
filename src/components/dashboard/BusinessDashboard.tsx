@@ -14,11 +14,14 @@ import {
   Calendar,
   DollarSign,
   Package,
-  LogOut
+  LogOut,
+  BarChart3,
+  Activity
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
+import CountUp from 'react-countup';
 
 interface DashboardStats {
   totalClientes: number;
@@ -56,6 +59,8 @@ export function BusinessDashboard() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [comercial, setComercial] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [ventasData, setVentasData] = useState<any[]>([]);
+  const [clientesData, setClientesData] = useState<any[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -142,6 +147,13 @@ export function BusinessDashboard() {
         clienteMasActivo
       });
 
+      // Generate chart data with real data
+      const ventasChartData = generateVentasChartData(pedidosData || []);
+      setVentasData(ventasChartData);
+
+      const clientesChartData = generateClientesChartData(pedidosData || []);
+      setClientesData(clientesChartData);
+
     } catch (error) {
       console.error('Error loading dashboard:', error);
       toast({
@@ -166,6 +178,44 @@ export function BusinessDashboard() {
     }).format(amount);
   };
 
+  const generateVentasChartData = (pedidosData: any[]) => {
+    const monthlyData: { [key: string]: { mes: string, ventas: number, pedidos: number } } = {};
+    
+    // Initialize last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKey = date.toISOString().slice(0, 7);
+      const monthName = date.toLocaleDateString('es-ES', { month: 'short' });
+      monthlyData[monthKey] = { mes: monthName, ventas: 0, pedidos: 0 };
+    }
+
+    // Aggregate real data
+    pedidosData.forEach(pedido => {
+      const monthKey = pedido.fecha_pedido.slice(0, 7);
+      if (monthlyData[monthKey]) {
+        monthlyData[monthKey].ventas += Number(pedido.total);
+        monthlyData[monthKey].pedidos += 1;
+      }
+    });
+
+    return Object.values(monthlyData);
+  };
+
+  const generateClientesChartData = (pedidosData: any[]) => {
+    const clienteVentas: { [key: string]: number } = {};
+    
+    pedidosData.forEach(pedido => {
+      const clienteNombre = (pedido.clientes as any)?.nombre || 'Desconocido';
+      clienteVentas[clienteNombre] = (clienteVentas[clienteNombre] || 0) + Number(pedido.total);
+    });
+
+    return Object.entries(clienteVentas)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([nombre, ventas]) => ({ nombre, ventas }));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center">
@@ -174,15 +224,8 @@ export function BusinessDashboard() {
     );
   }
 
-  // Sample chart data
-  const ventasData = [
-    { mes: 'Ene', ventas: 4500 },
-    { mes: 'Feb', ventas: 5200 },
-    { mes: 'Mar', ventas: 4800 },
-    { mes: 'Abr', ventas: 6100 },
-    { mes: 'May', ventas: 5900 },
-    { mes: 'Jun', ventas: 6800 },
-  ];
+  // Colors for pie chart
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--destructive))'];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
@@ -215,7 +258,9 @@ export function BusinessDashboard() {
               <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary count-up">{stats.totalClientes}</div>
+              <div className="text-3xl font-bold text-primary">
+                <CountUp end={stats.totalClientes} duration={2} />
+              </div>
               <p className="text-xs text-muted-foreground">
                 Clientes activos asignados
               </p>
@@ -228,7 +273,9 @@ export function BusinessDashboard() {
               <ShoppingCart className="h-4 w-4 text-secondary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-secondary count-up">{stats.pedidosMes}</div>
+              <div className="text-3xl font-bold text-secondary">
+                <CountUp end={stats.pedidosMes} duration={2.5} />
+              </div>
               <p className="text-xs text-muted-foreground">
                 Pedidos en {new Date().toLocaleDateString('es-ES', { month: 'long' })}
               </p>
@@ -241,8 +288,15 @@ export function BusinessDashboard() {
               <TrendingUp className="h-4 w-4 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success count-up">
-                {formatCurrency(stats.ventasTotal)}
+              <div className="text-3xl font-bold text-success">
+                <CountUp 
+                  end={stats.ventasTotal} 
+                  duration={3} 
+                  prefix="€"
+                  separator="."
+                  decimal=","
+                  decimals={2}
+                />
               </div>
               <p className="text-xs text-muted-foreground">
                 Acumulado histórico
@@ -370,45 +424,83 @@ export function BusinessDashboard() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <Card className="card-barplas">
                 <CardHeader>
-                  <CardTitle>Evolución de Ventas</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    Evolución de Ventas
+                  </CardTitle>
                   <CardDescription>Ventas mensuales en los últimos 6 meses</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={ventasData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="mes" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="ventas" 
-                        stroke="hsl(var(--primary))" 
-                        strokeWidth={3}
-                        dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
+                    <AreaChart data={ventasData}>
+                      <defs>
+                        <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis 
+                        dataKey="mes" 
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                       />
-                    </LineChart>
+                      <YAxis 
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      />
+                      <Tooltip 
+                        formatter={(value) => [formatCurrency(Number(value)), 'Ventas']}
+                        labelFormatter={(label) => `Mes: ${label}`}
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="ventas"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#colorVentas)"
+                      />
+                    </AreaChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
 
               <Card className="card-barplas">
                 <CardHeader>
-                  <CardTitle>Comparativa Mensual</CardTitle>
-                  <CardDescription>Ventas por mes en formato de barras</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-secondary" />
+                    Pedidos por Mes
+                  </CardTitle>
+                  <CardDescription>Número de pedidos mensuales</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={ventasData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="mes" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis 
+                        dataKey="mes"
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      />
+                      <YAxis 
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      />
+                      <Tooltip 
+                        formatter={(value) => [value, 'Pedidos']}
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
                       <Bar 
-                        dataKey="ventas" 
+                        dataKey="pedidos" 
                         fill="hsl(var(--secondary))"
                         radius={[4, 4, 0, 0]}
                       />
@@ -417,6 +509,58 @@ export function BusinessDashboard() {
                 </CardContent>
               </Card>
             </div>
+
+            {clientesData.length > 0 && (
+              <Card className="card-barplas">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-success" />
+                    Top Clientes por Ventas
+                  </CardTitle>
+                  <CardDescription>Los 5 clientes con mayores ventas</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={clientesData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ nombre, percent }) => `${nombre} (${(percent * 100).toFixed(0)}%)`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="ventas"
+                        >
+                          {clientesData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    
+                    <div className="space-y-3">
+                      {clientesData.map((cliente, index) => (
+                        <div key={cliente.nombre} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-4 h-4 rounded-full" 
+                              style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                            />
+                            <span className="font-medium">{cliente.nombre}</span>
+                          </div>
+                          <span className="font-bold text-primary">
+                            {formatCurrency(cliente.ventas)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>

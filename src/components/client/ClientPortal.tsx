@@ -128,9 +128,11 @@ export function ClientPortal() {
       }];
     });
 
+    // Show toast with animation
     toast({
-      title: "Producto agregado",
+      title: "✨ Producto agregado",
       description: `${producto.nombre} se agregó al carrito`,
+      duration: 2000,
     });
   };
 
@@ -428,14 +430,14 @@ export function ClientPortal() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((producto) => (
-              <Card key={producto.id} className="card-barplas hover:shadow-xl transition-all duration-200">
+              <Card key={producto.id} className="card-barplas hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group">
                 <CardHeader className="p-4">
-                  <div className="aspect-square bg-muted rounded-lg flex items-center justify-center mb-3">
+                  <div className="aspect-square bg-muted rounded-xl flex items-center justify-center mb-3 overflow-hidden group-hover:scale-105 transition-transform duration-300">
                     {producto.url_imagen ? (
                       <img 
                         src={producto.url_imagen} 
                         alt={producto.nombre}
-                        className="w-full h-full object-cover rounded-lg"
+                        className="w-full h-full object-cover rounded-xl"
                         loading="lazy"
                       />
                     ) : (
@@ -443,12 +445,12 @@ export function ClientPortal() {
                     )}
                   </div>
                   <div>
-                    <Badge variant="outline" className="text-xs mb-2">
+                    <Badge variant="outline" className="text-xs mb-2 bg-primary/10 text-primary border-primary/20">
                       {producto.sku}
                     </Badge>
-                    <CardTitle className="text-lg leading-tight">{producto.nombre}</CardTitle>
+                    <CardTitle className="text-lg leading-tight mb-2">{producto.nombre}</CardTitle>
                     {producto.descripcion && (
-                      <CardDescription className="text-sm line-clamp-2">
+                      <CardDescription className="text-sm line-clamp-2 mb-3">
                         {producto.descripcion}
                       </CardDescription>
                     )}
@@ -456,13 +458,13 @@ export function ClientPortal() {
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                   <div className="flex items-center justify-between">
-                    <div className="text-xl font-bold text-primary">
+                    <div className="text-2xl font-bold gradient-text">
                       {formatCurrency(producto.precio)}
                     </div>
                     <Button 
                       onClick={() => addToCart(producto)}
                       size="sm"
-                      className="btn-barplas"
+                      className="btn-barplas group-hover:scale-110 transition-transform duration-200"
                     >
                       <Plus className="w-4 h-4 mr-1" />
                       Agregar
