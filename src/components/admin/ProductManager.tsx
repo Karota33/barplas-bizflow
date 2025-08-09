@@ -56,7 +56,7 @@ export function ProductManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [formData, setFormData] = useState({
     sku: '',
     nombre: '',
@@ -109,7 +109,7 @@ export function ProductManager() {
       );
     }
 
-    if (categoryFilter) {
+    if (categoryFilter && categoryFilter !== 'all') {
       filtered = filtered.filter(product => product.categoria === categoryFilter);
     }
 
@@ -403,7 +403,7 @@ export function ProductManager() {
                     <SelectValue placeholder="Todas las categorías" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las categorías</SelectItem>
+                    <SelectItem value="all">Todas las categorías</SelectItem>
                     {CATEGORIAS.map((categoria) => (
                       <SelectItem key={categoria} value={categoria}>
                         {categoria}
