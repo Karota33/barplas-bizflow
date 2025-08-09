@@ -393,7 +393,7 @@ export function AdvancedAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis type="number" tickFormatter={(value) => formatCurrency(value)} />
                   <YAxis dataKey="name" type="category" width={120} />
-                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                  <Tooltip formatter={(value) => formatCurrency(typeof value === 'number' ? value : Number(value))} />
                   <Bar dataKey="revenue" fill="hsl(var(--secondary))" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
