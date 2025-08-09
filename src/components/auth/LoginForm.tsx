@@ -145,19 +145,9 @@ export function LoginForm() {
         <Card className="border-dashed border-2 border-muted">
           <CardContent className="pt-6">
             <div className="text-center text-sm text-muted-foreground">
-              <p className="font-semibold mb-2">Credenciales disponibles:</p>
-              <div className="space-y-2">
-                <div>
-                  <p className="font-medium">Opción 1:</p>
-                  <p>Email: <code className="bg-muted px-1 rounded">test@barplas.com</code></p>
-                  <p>Password: <code className="bg-muted px-1 rounded">karota33</code></p>
-                </div>
-                <div className="border-t pt-2">
-                  <p className="font-medium">Opción 2:</p>
-                  <p>Email: <code className="bg-muted px-1 rounded">javvv.6@gmail.com</code></p>
-                  <p>Password: <code className="bg-muted px-1 rounded">karota33</code></p>
-                </div>
-              </div>
+              <p className="font-semibold mb-2">Credenciales de Demo:</p>
+              <p>Email: <code className="bg-muted px-1 rounded">test@barplas.com</code></p>
+              <p>Password: <code className="bg-muted px-1 rounded">karota33</code></p>
             </div>
           </CardContent>
         </Card>
