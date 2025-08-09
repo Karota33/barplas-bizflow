@@ -146,7 +146,7 @@ export function LoginForm() {
           <CardContent className="pt-6">
             <div className="text-center text-sm text-muted-foreground">
               <p className="font-semibold mb-2">Credenciales de Demo:</p>
-              <p>Email: <code className="bg-muted px-1 rounded">test@barplas.com</code></p>
+              <p>Email: <code className="bg-muted px-1 rounded">javvv.6@gmail.com</code></p>
               <p>Password: <code className="bg-muted px-1 rounded">karota33</code></p>
             </div>
           </CardContent>
