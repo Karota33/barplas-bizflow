@@ -284,7 +284,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_stock_availability: {
+        Args: { product_ids: string[] }
+        Returns: {
+          producto_id: string
+          stock_disponible: number
+          nombre: string
+          precio: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
