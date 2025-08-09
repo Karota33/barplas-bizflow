@@ -17,24 +17,52 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* BARPLAS Brand Colors */
+    --primary: 142 100% 31%;  /* #009E40 BARPLAS Green */
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 218 88% 47%;  /* #1863DC BARPLAS Blue */
+    --secondary-foreground: 0 0% 98%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 142 100% 31%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 142 100% 31%;
+
+    /* BARPLAS Design System */
+    --barplas-green: 142 100% 31%;
+    --barplas-blue: 218 88% 47%;
+    --barplas-gray: 210 11% 71%;
+    
+    /* Success states */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 98%;
+    
+    /* Warning states */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+    
+    /* Info states */  
+    --info: 218 88% 47%;
+    --info-foreground: 0 0% 98%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--barplas-green)), hsl(var(--barplas-blue)));
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 71% 35%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 98%), hsl(210 40% 96%));
+    
+    /* Shadows */
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--barplas-green) / 0.2);
+    --shadow-card: 0 4px 20px -4px hsl(210 11% 71% / 0.15);
+    --shadow-glow: 0 0 40px hsl(var(--barplas-green) / 0.3);
 
     --radius: 0.5rem;
 
@@ -65,24 +93,49 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* BARPLAS Dark Theme */
+    --primary: 142 100% 35%;  /* Lighter green for dark mode */
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 218 88% 55%;  /* Lighter blue for dark mode */
+    --secondary-foreground: 0 0% 98%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 142 100% 35%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 142 100% 35%;
+
+    /* BARPLAS Dark Design System */
+    --barplas-green: 142 100% 35%;
+    --barplas-blue: 218 88% 55%;
+    --barplas-gray: 210 11% 40%;
+    
+    --success: 142 71% 50%;
+    --success-foreground: 0 0% 98%;
+    
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 98%;
+    
+    --info: 218 88% 55%;
+    --info-foreground: 0 0% 98%;
+
+    /* Dark Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--barplas-green)), hsl(var(--barplas-blue)));
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 50%), hsl(142 71% 40%));
+    --gradient-card: linear-gradient(135deg, hsl(222.2 84% 6%), hsl(217.2 32.6% 17.5%));
+    
+    /* Dark Shadows */
+    --shadow-elegant: 0 10px 30px -10px hsl(0 0% 0% / 0.4);
+    --shadow-card: 0 4px 20px -4px hsl(0 0% 0% / 0.25);
+    --shadow-glow: 0 0 40px hsl(var(--barplas-green) / 0.4);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -101,5 +154,57 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* BARPLAS Custom Components */
+  .btn-barplas {
+    @apply bg-gradient-to-r from-primary to-secondary text-primary-foreground;
+    @apply hover:shadow-lg hover:scale-105 transition-all duration-200;
+    @apply font-semibold rounded-lg px-6 py-3;
+  }
+  
+  .btn-barplas-outline {
+    @apply border-2 border-primary text-primary bg-transparent;
+    @apply hover:bg-primary hover:text-primary-foreground;
+    @apply transition-all duration-200 font-semibold rounded-lg px-6 py-3;
+  }
+  
+  .card-barplas {
+    @apply bg-card border border-border rounded-xl shadow-md;
+    @apply hover:shadow-lg transition-shadow duration-200;
+    background: var(--gradient-card);
+  }
+  
+  .gradient-text {
+    background: var(--gradient-primary);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  /* Loading animations */
+  @keyframes pulse-glow {
+    0%, 100% { 
+      box-shadow: 0 0 5px hsl(var(--primary) / 0.5); 
+    }
+    50% { 
+      box-shadow: 0 0 20px hsl(var(--primary) / 0.8); 
+    }
+  }
+  
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  /* Count up animation */
+  @keyframes count-up {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  
+  .count-up {
+    animation: count-up 0.6s ease-out;
   }
 }

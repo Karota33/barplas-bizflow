@@ -1,0 +1,506 @@
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  ShoppingCart, 
+  Plus, 
+  Minus, 
+  Search, 
+  Package, 
+  CheckCircle,
+  Building2,
+  Phone,
+  Mail
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface Producto {
+  id: string;
+  sku: string;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  url_imagen: string;
+}
+
+interface Cliente {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string;
+}
+
+interface CartItem extends Producto {
+  cantidad: number;
+  subtotal: number;
+}
+
+export function ClientPortal() {
+  const { clientId } = useParams<{ clientId: string }>();
+  const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+  const [notas, setNotas] = useState("");
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (clientId) {
+      loadClientData();
+    }
+  }, [clientId]);
+
+  const loadClientData = async () => {
+    try {
+      // Load client info
+      const { data: clienteData } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('id', clientId)
+        .eq('activo', true)
+        .single();
+
+      if (!clienteData) {
+        toast({
+          title: "Error",
+          description: "Cliente no encontrado o inactivo",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setCliente(clienteData);
+
+      // Load client's catalog
+      const { data: catalogData } = await supabase
+        .from('catalogos_clientes')
+        .select(`
+          productos(*)
+        `)
+        .eq('cliente_id', clientId)
+        .eq('activo', true);
+
+      const productosData = catalogData?.map(item => (item as any).productos).filter(Boolean) || [];
+      setProductos(productosData);
+
+    } catch (error) {
+      console.error('Error loading client data:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los datos del cliente",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addToCart = (producto: Producto) => {
+    setCart(current => {
+      const existingItem = current.find(item => item.id === producto.id);
+      
+      if (existingItem) {
+        return current.map(item => 
+          item.id === producto.id 
+            ? { 
+                ...item, 
+                cantidad: item.cantidad + 1,
+                subtotal: (item.cantidad + 1) * item.precio
+              }
+            : item
+        );
+      }
+      
+      return [...current, { 
+        ...producto, 
+        cantidad: 1, 
+        subtotal: producto.precio 
+      }];
+    });
+
+    toast({
+      title: "Producto agregado",
+      description: `${producto.nombre} se agregó al carrito`,
+    });
+  };
+
+  const updateQuantity = (productId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeFromCart(productId);
+      return;
+    }
+
+    setCart(current =>
+      current.map(item =>
+        item.id === productId
+          ? { 
+              ...item, 
+              cantidad: newQuantity,
+              subtotal: newQuantity * item.precio
+            }
+          : item
+      )
+    );
+  };
+
+  const removeFromCart = (productId: string) => {
+    setCart(current => current.filter(item => item.id !== productId));
+  };
+
+  const getTotalCart = () => {
+    return cart.reduce((total, item) => total + item.subtotal, 0);
+  };
+
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.cantidad, 0);
+  };
+
+  const handleCheckout = async () => {
+    if (cart.length === 0 || !cliente) return;
+
+    setIsCheckingOut(true);
+
+    try {
+      // Create order
+      const { data: pedido, error: pedidoError } = await supabase
+        .from('pedidos')
+        .insert({
+          cliente_id: cliente.id,
+          total: getTotalCart(),
+          estado: 'pendiente',
+          notas: notas.trim() || null,
+          fecha_pedido: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (pedidoError) {
+        throw pedidoError;
+      }
+
+      // Create order items
+      const orderItems = cart.map(item => ({
+        pedido_id: pedido.id,
+        producto_id: item.id,
+        cantidad: item.cantidad,
+        precio_unitario: item.precio,
+        subtotal: item.subtotal
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('pedido_items')
+        .insert(orderItems);
+
+      if (itemsError) {
+        throw itemsError;
+      }
+
+      // Success - clear cart and show confirmation
+      setOrderSuccess(pedido.numero_pedido);
+      setCart([]);
+      setNotas("");
+      setIsCartOpen(false);
+
+      toast({
+        title: "¡Pedido realizado!",
+        description: `Tu pedido ${pedido.numero_pedido} ha sido enviado correctamente`,
+      });
+
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo procesar el pedido. Intenta nuevamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
+  const filteredProducts = productos.filter(producto =>
+    producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    producto.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando catálogo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (orderSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
+        <Card className="card-barplas max-w-lg w-full text-center">
+          <CardHeader>
+            <div className="mx-auto w-16 h-16 bg-success rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl text-success">¡Pedido Confirmado!</CardTitle>
+            <CardDescription>
+              Tu pedido ha sido recibido y será procesado pronto
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="text-sm text-muted-foreground">Número de Pedido</p>
+              <p className="text-lg font-bold">{orderSuccess}</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Te contactaremos pronto para confirmar los detalles de entrega.
+            </p>
+            <Button 
+              onClick={() => setOrderSuccess(null)}
+              className="w-full"
+            >
+              Realizar Otro Pedido
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
+                <Building2 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">Portal de {cliente?.nombre}</h1>
+                <p className="text-sm text-muted-foreground">Catálogo personalizado BARPLAS</p>
+              </div>
+            </div>
+            
+            <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="relative">
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Carrito
+                  {getTotalItems() > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-2 -right-2 px-2 py-1 text-xs"
+                    >
+                      {getTotalItems()}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-full sm:max-w-md">
+                <SheetHeader>
+                  <SheetTitle>Carrito de Compras</SheetTitle>
+                  <SheetDescription>
+                    Revisa tu pedido antes de enviar
+                  </SheetDescription>
+                </SheetHeader>
+                
+                <div className="mt-6 space-y-4">
+                  {cart.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">
+                      Tu carrito está vacío
+                    </p>
+                  ) : (
+                    <>
+                      <div className="space-y-4 max-h-96 overflow-y-auto">
+                        {cart.map(item => (
+                          <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-sm">{item.nombre}</h4>
+                              <p className="text-xs text-muted-foreground">{item.sku}</p>
+                              <p className="text-sm font-bold">{formatCurrency(item.precio)}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => updateQuantity(item.id, item.cantidad - 1)}
+                              >
+                                <Minus className="w-3 h-3" />
+                              </Button>
+                              <span className="w-8 text-center text-sm">{item.cantidad}</span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => updateQuantity(item.id, item.cantidad + 1)}
+                              >
+                                <Plus className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="space-y-4 border-t pt-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Notas del pedido (opcional)</label>
+                          <Textarea
+                            placeholder="Instrucciones especiales, fecha de entrega preferida, etc..."
+                            value={notas}
+                            onChange={(e) => setNotas(e.target.value)}
+                            rows={3}
+                          />
+                        </div>
+                        
+                        <div className="bg-muted p-3 rounded-lg">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Total:</span>
+                            <span className="text-lg font-bold text-primary">
+                              {formatCurrency(getTotalCart())}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          onClick={handleCheckout}
+                          disabled={isCheckingOut}
+                          className="w-full btn-barplas"
+                        >
+                          {isCheckingOut ? "Procesando..." : "Confirmar Pedido"}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Search */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Buscar productos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {/* Products Grid */}
+        {filteredProducts.length === 0 ? (
+          <Card className="card-barplas text-center py-12">
+            <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <CardTitle className="mb-2">
+              {searchTerm ? "Sin resultados" : "Catálogo vacío"}
+            </CardTitle>
+            <CardDescription>
+              {searchTerm 
+                ? "No se encontraron productos que coincidan con tu búsqueda" 
+                : "No hay productos disponibles en tu catálogo personalizado"
+              }
+            </CardDescription>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredProducts.map((producto) => (
+              <Card key={producto.id} className="card-barplas hover:shadow-xl transition-all duration-200">
+                <CardHeader className="p-4">
+                  <div className="aspect-square bg-muted rounded-lg flex items-center justify-center mb-3">
+                    {producto.url_imagen ? (
+                      <img 
+                        src={producto.url_imagen} 
+                        alt={producto.nombre}
+                        className="w-full h-full object-cover rounded-lg"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <Package className="w-12 h-12 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <Badge variant="outline" className="text-xs mb-2">
+                      {producto.sku}
+                    </Badge>
+                    <CardTitle className="text-lg leading-tight">{producto.nombre}</CardTitle>
+                    {producto.descripcion && (
+                      <CardDescription className="text-sm line-clamp-2">
+                        {producto.descripcion}
+                      </CardDescription>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xl font-bold text-primary">
+                      {formatCurrency(producto.precio)}
+                    </div>
+                    <Button 
+                      onClick={() => addToCart(producto)}
+                      size="sm"
+                      className="btn-barplas"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Agregar
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Client Info Footer */}
+        {cliente && (
+          <Card className="card-barplas mt-8">
+            <CardContent className="p-6">
+              <div className="text-center">
+                <h3 className="font-semibold mb-2">¿Necesitas ayuda con tu pedido?</h3>
+                <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+                  {cliente.email && (
+                    <div className="flex items-center gap-1">
+                      <Mail className="w-4 h-4" />
+                      {cliente.email}
+                    </div>
+                  )}
+                  {cliente.telefono && (
+                    <div className="flex items-center gap-1">
+                      <Phone className="w-4 h-4" />
+                      {cliente.telefono}
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  BARPLAS Canarias - Productos para tu negocio
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
