@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-type OrderStatus = 'pendiente' | 'confirmado' | 'en_proceso' | 'enviado' | 'entregado' | 'cancelado';
+type OrderStatus = 'recibido' | 'revision' | 'confirmado_parcial' | 'preparacion' | 'enviado' | 'entregado' | 'cancelado';
 
 interface Order {
   id: string;
@@ -55,33 +55,39 @@ interface OrderNote {
 }
 
 const ORDER_STATUSES = {
-  pendiente: { 
-    label: 'Pendiente', 
-    color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-    icon: Clock,
-    progress: 0
-  },
-  confirmado: { 
-    label: 'Confirmado', 
+  recibido: { 
+    label: 'Recibido', 
     color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    icon: Clock,
+    progress: 10
+  },
+  revision: { 
+    label: 'En Revisión', 
+    color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     icon: CheckCircle,
     progress: 25
   },
-  en_proceso: { 
-    label: 'En Proceso', 
+  confirmado_parcial: { 
+    label: 'Confirmado Parcial', 
     color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
     icon: Package,
     progress: 50
   },
+  preparacion: { 
+    label: 'En Preparación', 
+    color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+    icon: Package,
+    progress: 75
+  },
   enviado: { 
     label: 'Enviado', 
-    color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+    color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     icon: Truck,
-    progress: 75
+    progress: 90
   },
   entregado: { 
     label: 'Entregado', 
-    color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    color: 'bg-green-200 text-green-900 dark:bg-green-800 dark:text-green-100',
     icon: Star,
     progress: 100
   },
@@ -235,9 +241,10 @@ export function OrderTimeline() {
 
   const getNextStatus = (currentStatus: OrderStatus): OrderStatus | null => {
     const statusFlow: Record<OrderStatus, OrderStatus | null> = {
-      pendiente: 'confirmado',
-      confirmado: 'en_proceso',
-      en_proceso: 'enviado',
+      recibido: 'revision',
+      revision: 'confirmado_parcial',
+      confirmado_parcial: 'preparacion',
+      preparacion: 'enviado',
       enviado: 'entregado',
       entregado: null,
       cancelado: null
