@@ -27,6 +27,9 @@ export function ImageUpload({
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImage || null);
   const { toast } = useToast();
+  
+  // Generate unique ID for this instance
+  const uniqueId = `file-input-${bucket}-${path}-${Math.random().toString(36).substring(2)}`;
 
   const resizeImage = (file: File, maxWidth: number, maxHeight: number): Promise<File> => {
     return new Promise((resolve) => {
@@ -122,7 +125,7 @@ export function ImageUpload({
     <Card className={`${className}`}>
       <CardContent className="p-4">
         <div
-          className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors"
+          className="relative border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors"
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
         >
@@ -144,6 +147,15 @@ export function ImageUpload({
                   <X className="w-4 h-4" />
                 </Button>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById(uniqueId)?.click()}
+                disabled={uploading}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Cambiar imagen
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
@@ -158,28 +170,26 @@ export function ImageUpload({
                   JPG, PNG o WebP (máx. {maxWidth}x{maxHeight}px)
                 </p>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById(uniqueId)?.click()}
+                disabled={uploading}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {uploading ? 'Subiendo...' : 'Seleccionar imagen'}
+              </Button>
             </div>
           )}
 
           <input
+            id={uniqueId}
             type="file"
             accept="image/*"
             onChange={handleInputChange}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            className="hidden"
             disabled={uploading}
           />
-
-          {!preview && (
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-4"
-              disabled={uploading}
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              {uploading ? 'Subiendo...' : 'Seleccionar imagen'}
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>

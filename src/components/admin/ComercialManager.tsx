@@ -107,20 +107,10 @@ export function ComercialManager() {
           description: "Comercial actualizado correctamente"
         });
       } else {
-        // For new comercial, we need to create auth user first
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: formData.email,
-          password: 'temporal123', // Should be changed on first login
-          email_confirm: true
-        });
-
-        if (authError) throw authError;
-
-        // Create comercial record
+        // Create comercial record - User will need to register separately
         const { error } = await supabase
           .from('comerciales')
           .insert({
-            id: authData.user.id,
             nombre: formData.nombre,
             email: formData.email,
             role: formData.role,
@@ -131,7 +121,7 @@ export function ComercialManager() {
 
         toast({
           title: "Éxito",
-          description: "Comercial creado correctamente. Contraseña temporal: temporal123"
+          description: "Comercial creado correctamente. El usuario deberá registrarse con este email."
         });
       }
 
