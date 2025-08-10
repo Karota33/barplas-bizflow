@@ -73,7 +73,7 @@ export function EnhancedClientManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Cliente | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
@@ -458,7 +458,7 @@ export function EnhancedClientManager() {
                     <SelectValue placeholder="Todos los estados" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos los estados</SelectItem>
+                    <SelectItem value="all">Todos los estados</SelectItem>
                     <SelectItem value="activo">Solo activos</SelectItem>
                     <SelectItem value="inactivo">Solo inactivos</SelectItem>
                   </SelectContent>
